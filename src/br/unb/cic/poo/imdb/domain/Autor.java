@@ -3,9 +3,11 @@ package br.unb.cic.poo.imdb.domain;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Table(name="TB_AUTOR")
@@ -21,6 +23,8 @@ public class Autor {
 	@Column(name="DESCRICAO")
 	private String descricao;
 	
+	
+	@OneToMany(mappedBy="autor", cascade={CascadeType.ALL})
 	private List<TrabalhoArtistico> producao;
 	
 	public Autor() {
@@ -61,4 +65,18 @@ public class Autor {
 	public void adicionaTrabalhoArtistico(TrabalhoArtistico t) {
 		producao.add(t);
 	}	
+	
+	public int producao() {
+		return producao.size();
+	}
+
+	public List<TrabalhoArtistico> getProducao() {
+		return producao;
+	}
+
+	public void setProducao(List<TrabalhoArtistico> producao) {
+		this.producao = producao;
+	}
+	
+	
 }

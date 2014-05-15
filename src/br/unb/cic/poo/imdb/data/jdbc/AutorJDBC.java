@@ -18,6 +18,14 @@ import br.unb.cic.poo.imdb.domain.TrabalhoArtistico;
  */
 public class AutorJDBC implements br.unb.cic.poo.imdb.data.IAutorDAO{
 
+	private static final String CONSULTA_PRODUCAO_AUTOR = 
+			"SELECT A.ID_AUTOR, A.NOME, A.DESCRICAO, " +
+	          "       T.ID_TRABALHO_ARTISTICO, T.TITULO, T.ANO_PRODUCAO, " +
+	          "       G.ID_GENERO, G.NOME, G.DESCRICAO " +
+	          "FROM TB_AUTOR A, TB_TRABALHO_ARTISTICO T, TB_GENERO G " +
+	          "WHERE A.ID_AUTOR = T.FK_AUTOR " +
+	          "  AND G.ID_GENERO = T.FK_GENERO " +
+	          "  AND A.ID_AUTOR = ?"; 
 	@Override
 	public void salvarAutor(Autor autor) throws DBException {
 		JDBCManager manager = DAOFactory.instance().manager();
@@ -48,7 +56,10 @@ public class AutorJDBC implements br.unb.cic.poo.imdb.data.IAutorDAO{
 		try {
 			Connection con = manager.getConnection();
 			
-			PreparedStatement ps = con.prepareStatement("SELECT ID_AUTOR, NOME, DESCRICAO FROM TB_AUTOR WHERE ID_AUTOR = ?");
+			PreparedStatement ps = con.prepareStatement(
+					"SELECT ID_AUTOR, NOME, DESCRICAO " +
+					"FROM TB_AUTOR " +
+					"WHERE ID_AUTOR = ?");
 			
 			ps.setLong(1, id);
 			
@@ -77,10 +88,20 @@ public class AutorJDBC implements br.unb.cic.poo.imdb.data.IAutorDAO{
 		try {
 			con = manager.getConnection();
 			con.setAutoCommit(false);
-			PreparedStatement ps = con.prepareStatement("DELETE FROM TB_AUTOR WHERE ID_AUTOR = ?");
 			
-			ps.setLong(1, id);
-			ps.executeUpdate();
+			PreparedStatement ps1 = con.prepareStatement(
+					"DELETE FROM TB_TRABALHO_ARTISTICO " +
+					"WHERE FK_AUTOR = ?");
+			
+			PreparedStatement ps2 = con.prepareStatement(
+					"DELETE FROM TB_AUTOR WHERE ID_AUTOR = ?");
+			
+			ps1.setLong(1, id);
+			ps1.executeUpdate();
+			
+			ps2.setLong(1, id);
+			ps2.executeUpdate();
+			
 			con.commit();
 			con.close();
 		}catch(Exception e) {
@@ -121,6 +142,57 @@ public class AutorJDBC implements br.unb.cic.poo.imdb.data.IAutorDAO{
 		}
 		catch(Exception e) {
 			throw new DBException(e);
+		}
+	}
+
+	@Override
+	public Autor carregarProducao(long id) throws DBException {
+		JDBCManager manager = DAOFactory.instance().manager();
+		Connection con = null; 
+		
+		try{
+			con = manager.getConnection();
+			PreparedStatement ps = con.prepareStatement(CONSULTA_PRODUCAO_AUTOR);
+			ps.setLong(1, id);
+			ResultSet rs = ps.executeQuery();
+			
+			if(rs.next()) {
+				String nome = rs.getString(2);
+				String descricao = rs.getString(3);
+				Autor autor = new Autor(id, nome, descricao);
+			
+				Long idTrabalhoArtistico = rs.getLong(4);
+				String titulo = rs.getString(5);
+				int anoProducao = rs.getInt(6);
+			
+				TrabalhoArtistico trabalho = new TrabalhoArtistico(idTrabalhoArtistico, titulo, anoProducao);
+				
+				autor.adicionaTrabalhoArtistico(trabalho);
+				
+				while(rs.next()) {
+					idTrabalhoArtistico = rs.getLong(4);
+					titulo = rs.getString(5);
+					anoProducao = rs.getInt(6);
+						
+					trabalho = new TrabalhoArtistico(idTrabalhoArtistico, titulo, anoProducao);
+					
+					autor.adicionaTrabalhoArtistico(trabalho);
+					
+				}
+				return autor;
+			}
+			return null;
+		}
+		catch(Exception e) {
+			throw new DBException(e);
+		}
+		finally{
+			try {
+				con.close();
+			}
+			catch(Exception e) {
+				throw new DBException(e);
+			}
 		}
 	}
 }

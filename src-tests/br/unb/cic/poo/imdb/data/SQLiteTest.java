@@ -46,12 +46,14 @@ public class SQLiteTest extends TestCase {
 			String descricao = "Sonic Youth was an American alternative rock band from New York City, formed in 1981. Their most recent...";
 			
 			dao.salvarAutor(new Autor(1L, nome, descricao));
-		
+			dao.salvarTrabalhoArtistico(1L, new TrabalhoArtistico(1L, "GOO", 1990));
+			
 			Autor autor = dao.pesquisaPorId(1L);
 			
 			assertNotNull(autor);
 			assertEquals(nome, autor.getNome());
 			assertEquals(descricao, autor.getDescricao());
+			assertEquals(0, autor.producao());
 		}
 		catch(Exception e) {
 			fail();
@@ -61,11 +63,19 @@ public class SQLiteTest extends TestCase {
 	public void testIncluirTrabalhoArtistico() {
 		AutorJDBC dao = new AutorJDBC();
 		try {
-			String titulo = "Goo";
-			int anoProducao = 1990;
+			String titulo1 = "Dirty";
+			int anoProducao1 = 1988;
+			
+			String titulo2 = "Goo";
+			int anoProducao2 = 1990;
 			
 			dao.salvarAutor(new Autor(1L, "Sonic Youth", "foo"));
-			dao.salvarTrabalhoArtistico(1L, new TrabalhoArtistico(1L, titulo, anoProducao));
+			dao.salvarTrabalhoArtistico(1L, new TrabalhoArtistico(1L, titulo1, anoProducao1));
+			dao.salvarTrabalhoArtistico(1L, new TrabalhoArtistico(2L, titulo2, anoProducao2));
+			
+			Autor autor = dao.carregarProducao(1L);
+			
+			assertEquals(2, autor.producao());
 		}
 		catch(Exception e) {
 			e.getCause().printStackTrace();

@@ -34,6 +34,17 @@ public interface IAutorDAO {
 	public Autor pesquisaPorId(long id) throws DBException;
 	
 	/**
+	 * Pesquisa um autor pelo id informado e recupera a 
+	 * producao do autor. 
+	 * 
+	 * @param id identicador do autor
+	 * @return autor com toda sua producao artistica 
+	 * 
+	 * @throws DBException caso algum problema ocorra
+	 */
+	public Autor carregarProducao(long id) throws DBException;
+	
+	/**
 	 * Remove um autor do banco de dados
 	 * @param id identificador do autor a ser removido 
 	 * @throws DBException caso algum problema ocorra na camada de persistencia
